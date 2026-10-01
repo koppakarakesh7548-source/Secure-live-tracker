@@ -12,7 +12,8 @@ with application.app_context():
     if not SystemSetting.get('retention_days'):
         SystemSetting.set('retention_days', '90')
     admin_user = application.config.get('ADMIN_USERNAME', 'admin')
-    if not Admin.query.filter_by(username=admin_user).first():
+    admin = Admin.query.filter_by(username=admin_user).first()
+    if not admin:
         admin = Admin(
             username=admin_user,
             email=application.config.get('ADMIN_EMAIL', 'admin@securetracker.local'),
@@ -22,6 +23,8 @@ with application.app_context():
         db.session.add(admin)
         db.session.commit()
         print(f"[WSGI INIT] Admin '{admin_user}' initialized.")
+
+    admin_id = admin.id if admin else 1
 
     from models import TrackingLink
     seed_links = [
@@ -38,7 +41,7 @@ with application.app_context():
                 token=token,
                 target_url=target,
                 name=title,
-                created_by_id=admin.id
+                created_by_id=admin_id
             ))
     db.session.commit()
 
