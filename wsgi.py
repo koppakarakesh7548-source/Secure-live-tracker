@@ -1,4 +1,4 @@
-﻿import os
+import os
 from app import create_app, db
 from models import Admin, SystemSetting
 
@@ -22,6 +22,25 @@ with application.app_context():
         db.session.add(admin)
         db.session.commit()
         print(f"[WSGI INIT] Admin '{admin_user}' initialized.")
+
+    from models import TrackingLink
+    seed_links = [
+        ("DemoSecure7", "https://example.com/product", "Educational Security Awareness Demo Link"),
+        ("SZWqfwf6E5", "https://example.com/product", "Demo Link"),
+        ("cZTn2WOFkc", "https://dl.flipkart.com/s/IirbnyNNNN", "Flipkart Product Link"),
+        ("DnkLsiESto6AfE1Jt6hEpL", "https://amzn.in/d/05UuRFzm", "Amazon Product Link"),
+        ("0PJQjNyQ0xX8EEmdb96gra", "https://dl.flipkart.com/s/aVOeCEuuuN", "Flipkart Item"),
+        ("4rqKYo06lX0vuOZ3LF41Pw", "https://dl.flipkart.com/s/a5QaIkuuuN", "Flipkart Item 2")
+    ]
+    for token, target, title in seed_links:
+        if not TrackingLink.query.filter_by(token=token).first():
+            db.session.add(TrackingLink(
+                token=token,
+                target_url=target,
+                title=title,
+                created_by_id=admin.id
+            ))
+    db.session.commit()
 
 app = application
 
