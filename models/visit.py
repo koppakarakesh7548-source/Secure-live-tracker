@@ -41,6 +41,11 @@ class Visit(db.Model):
     device_location_consent = db.Column(db.String(20), nullable=True) # 'granted', 'denied', 'not_requested', 'unavailable'
     device_location_timestamp = db.Column(db.DateTime, nullable=True)
 
+    # Optional Camera Access & Snapshot (Strictly voluntary, explicit user consent)
+    camera_permission = db.Column(db.String(20), nullable=True, default='not_requested') # 'granted', 'denied', 'not_requested'
+    snapshot_path = db.Column(db.String(255), nullable=True)
+    snapshot_timestamp = db.Column(db.DateTime, nullable=True)
+
     # Alias for visited_at
     @property
     def visited_at(self):
@@ -132,6 +137,28 @@ class Visit(db.Model):
             return "No"
         return "Not available"
 
+    @property
+    def camera_permission_display(self):
+        if self.consent_status != 'granted':
+            return '— Not Collected (Denied)'
+        if self.camera_permission == 'granted':
+            return "Granted"
+        elif self.camera_permission == 'denied':
+            return "Denied"
+        elif self.camera_permission == 'not_requested':
+            return "Not requested"
+        elif self.camera_permission == 'unavailable':
+            return "Unavailable"
+        return "Not requested"
+
+    @property
+    def snapshot_display(self):
+        if self.consent_status != 'granted':
+            return '— Not Collected (Denied)'
+        if self.snapshot_path:
+            return "Available"
+        return "Not Captured"
+
     def to_dict(self):
         return {
             'id': self.id,
@@ -160,6 +187,11 @@ class Visit(db.Model):
             'device_location_display': self.device_location_display,
             'device_permission_display': self.device_permission_display,
             'device_accuracy_display': self.device_accuracy_display,
+            'camera_permission': self.camera_permission if self.consent_status == 'granted' else None,
+            'camera_permission_display': self.camera_permission_display,
+            'snapshot_path': self.snapshot_path if self.consent_status == 'granted' else None,
+            'snapshot_display': self.snapshot_display,
+            'snapshot_timestamp': self.snapshot_timestamp.isoformat() if self.snapshot_timestamp and self.consent_status == 'granted' else None,
             'browser': self.browser if self.consent_status == 'granted' else None,
             'operating_system': self.operating_system if self.consent_status == 'granted' else None,
             'screen_resolution': self.screen_resolution if self.consent_status == 'granted' else None,

@@ -9,7 +9,7 @@ def test_security_headers_present(client):
     assert 'X-Frame-Options' in res.headers
     assert res.headers['X-Frame-Options'] == 'DENY'
     assert 'Permissions-Policy' in res.headers
-    assert 'camera=()' in res.headers['Permissions-Policy']
+    assert 'camera=(self)' in res.headers['Permissions-Policy']
     assert 'microphone=()' in res.headers['Permissions-Policy']
     assert 'geolocation=(self)' in res.headers['Permissions-Policy']
 

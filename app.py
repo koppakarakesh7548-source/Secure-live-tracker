@@ -134,6 +134,12 @@ def create_app(config_name=None):
                         conn.execute(text('ALTER TABLE visits ADD COLUMN device_location_consent VARCHAR(20)'))
                     if 'device_location_timestamp' not in cols:
                         conn.execute(text('ALTER TABLE visits ADD COLUMN device_location_timestamp DATETIME'))
+                    if 'camera_permission' not in cols:
+                        conn.execute(text('ALTER TABLE visits ADD COLUMN camera_permission VARCHAR(20) DEFAULT "not_requested"'))
+                    if 'snapshot_path' not in cols:
+                        conn.execute(text('ALTER TABLE visits ADD COLUMN snapshot_path VARCHAR(255)'))
+                    if 'snapshot_timestamp' not in cols:
+                        conn.execute(text('ALTER TABLE visits ADD COLUMN snapshot_timestamp DATETIME'))
                     conn.commit()
         except Exception:
             pass
@@ -174,7 +180,17 @@ def create_app(config_name=None):
         with app.app_context():
             days = int(SystemSetting.get('retention_days', 90))
             cutoff = datetime.now(timezone.utc) - timedelta(days=days)
-            purged = Visit.query.filter(Visit.timestamp < cutoff).delete(synchronize_session=False)
+            old_visits = Visit.query.filter(Visit.timestamp < cutoff).all()
+            for v in old_visits:
+                if v.snapshot_path:
+                    try:
+                        abs_p = os.path.join(BASE_DIR, 'instance', v.snapshot_path)
+                        if os.path.exists(abs_p):
+                            os.remove(abs_p)
+                    except Exception:
+                        pass
+                db.session.delete(v)
+            purged = len(old_visits)
             db.session.commit()
             print(f"[SUCCESS] Purged {purged} visit records older than {days} days.")
 

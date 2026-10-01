@@ -280,4 +280,88 @@ def test_api_track_continue_without_location(client, sample_link, app):
         assert visit.device_location_display == 'Not shared'
         assert visit.device_latitude is None
 
+def test_api_track_camera_granted_with_snapshot(client, sample_link, app):
+    sample_b64 = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////wgALCAABAAEBAREA/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPxA="
+    payload = {
+        'decision': 'allow',
+        'camera_permission': 'granted',
+        'snapshot_data': sample_b64
+    }
+    res = client.post(
+        f'/api/track/{sample_link.token}/consent',
+        json=payload
+    )
+    assert res.status_code == 200
+    with app.app_context():
+        visit = Visit.query.filter_by(tracking_link_id=sample_link.id).order_by(Visit.id.desc()).first()
+        assert visit is not None
+        assert visit.camera_permission == 'granted'
+        assert visit.camera_permission_display == 'Granted'
+        assert visit.snapshot_path is not None
+        assert visit.snapshot_display == 'Available'
+        assert visit.snapshot_timestamp is not None
+
+def test_api_track_camera_denied(client, sample_link, app):
+    payload = {
+        'decision': 'allow',
+        'camera_permission': 'denied',
+        'snapshot_data': None
+    }
+    res = client.post(
+        f'/api/track/{sample_link.token}/consent',
+        json=payload
+    )
+    assert res.status_code == 200
+    with app.app_context():
+        visit = Visit.query.filter_by(tracking_link_id=sample_link.id).order_by(Visit.id.desc()).first()
+        assert visit is not None
+        assert visit.camera_permission == 'denied'
+        assert visit.camera_permission_display == 'Denied'
+        assert visit.snapshot_path is None
+        assert visit.snapshot_display == 'Not Captured'
+
+def test_api_track_continue_without_camera(client, sample_link, app):
+    payload = {
+        'decision': 'allow',
+        'camera_permission': 'not_requested'
+    }
+    res = client.post(
+        f'/api/track/{sample_link.token}/consent',
+        json=payload
+    )
+    assert res.status_code == 200
+    with app.app_context():
+        visit = Visit.query.filter_by(tracking_link_id=sample_link.id).order_by(Visit.id.desc()).first()
+        assert visit is not None
+        assert visit.camera_permission == 'not_requested'
+        assert visit.camera_permission_display == 'Not requested'
+        assert visit.snapshot_path is None
+        assert visit.snapshot_display == 'Not Captured'
+
+def test_view_and_delete_snapshot_admin(auth_client, client, sample_link, app):
+    sample_b64 = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////wgALCAABAAEBAREA/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPxA="
+    res = client.post(
+        f'/api/track/{sample_link.token}/consent',
+        json={'decision': 'allow', 'camera_permission': 'granted', 'snapshot_data': sample_b64}
+    )
+    assert res.status_code == 200
+
+    with app.app_context():
+        visit = Visit.query.filter_by(tracking_link_id=sample_link.id).order_by(Visit.id.desc()).first()
+        visit_id = visit.id
+        assert visit.snapshot_path is not None
+
+    # View snapshot as authenticated admin
+    view_res = auth_client.get(f'/dashboard/visits/{visit_id}/snapshot')
+    assert view_res.status_code == 200
+
+    # Delete snapshot as authenticated admin
+    del_res = auth_client.post(f'/dashboard/visits/{visit_id}/snapshot/delete')
+    assert del_res.status_code == 302
+
+    with app.app_context():
+        refreshed = db.session.get(Visit, visit_id)
+        assert refreshed.snapshot_path is None
+        assert refreshed.snapshot_display == 'Not Captured'
+
 

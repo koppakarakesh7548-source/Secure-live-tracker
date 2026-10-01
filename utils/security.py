@@ -221,8 +221,8 @@ def add_security_headers(response):
     response.headers['X-Frame-Options'] = 'DENY'
     response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
     
-    # Explicitly prohibit camera and microphone while permitting voluntary geolocation prompt on self
-    response.headers['Permissions-Policy'] = 'camera=(), microphone=(), geolocation=(self)'
+    # Explicitly prohibit microphone while permitting voluntary camera and geolocation prompts on self
+    response.headers['Permissions-Policy'] = 'camera=(self), microphone=(), geolocation=(self)'
     
     if request.is_secure or request.headers.get('X-Forwarded-Proto') == 'https':
         response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'

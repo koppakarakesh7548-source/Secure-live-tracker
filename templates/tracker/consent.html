@@ -85,6 +85,54 @@
     </div>
   </div>
 
+  <!-- Step 3: Voluntary Camera Access Step -->
+  <div class="consent-card" id="consent-step-3" style="display: none;">
+    <div class="consent-icon" style="background: rgba(168, 85, 247, 0.15); color: #c084fc;">📷</div>
+    <h2 class="consent-title" style="font-size: 1.5rem;">Camera Access (Optional)</h2>
+    <div class="consent-subtitle">Educational Cybersecurity &amp; Hardware Telemetry Demonstration</div>
+
+    <div class="consent-statement">
+      <p style="margin-bottom: 0.85rem;">
+        This educational demonstration highlights how web applications request device hardware access via standard browser APIs (<code>navigator.mediaDevices.getUserMedia</code>).
+      </p>
+
+      <div style="background-color: rgba(168, 85, 247, 0.1); border-left: 3px solid #a855f7; padding: 0.65rem 0.85rem; border-radius: var(--radius-sm); margin-bottom: 0.85rem; font-size: 0.84rem; color: #e9d5ff;">
+        🔒 <strong>Camera Privacy Principles:</strong>
+        <ul style="margin: 0.35rem 0 0 1.2rem; padding: 0; font-size: 0.82rem;">
+          <li>Captures <strong>one user-initiated snapshot only</strong> &mdash; no continuous or background recording.</li>
+          <li>Camera hardware turns off immediately after snapshot capture.</li>
+          <li>Microphone access is <strong>strictly prohibited</strong> and never requested.</li>
+          <li>Your browser displays its native permission prompt. You may freely deny it.</li>
+        </ul>
+      </div>
+
+      <p style="font-size: 0.82rem; color: var(--text-muted);">
+        If denied or skipped, you are immediately redirected to your destination without camera access.
+      </p>
+    </div>
+
+    <!-- Live Preview & Capture elements -->
+    <div id="camera-preview-container" style="display: none; margin-bottom: 1rem; text-align: center;">
+      <video id="camera-video" playsinline autoplay muted style="width: 100%; max-width: 320px; border-radius: var(--radius-md); border: 2px solid #a855f7; display: block; margin: 0 auto;"></video>
+      <canvas id="camera-canvas" style="display: none;"></canvas>
+    </div>
+
+    <div id="camera-status" style="display:none; margin-bottom: 1rem; text-align: center; font-size: 0.88rem; color: #c084fc;">
+      <span class="spinner"></span> Awaiting camera permission...
+    </div>
+
+    <!-- Step 3 Controls -->
+    <div class="consent-actions" id="step-3-actions">
+      <button type="button" id="btn-allow-camera" class="btn btn-primary btn-lg" style="background: linear-gradient(135deg, #7c3aed, #a855f7); border-color: #7c3aed;">
+        📸 Allow Camera &amp; Capture Snapshot
+      </button>
+
+      <button type="button" id="btn-skip-camera" class="btn btn-outline btn-lg">
+        Continue Without Camera
+      </button>
+    </div>
+  </div>
+
   <!-- Hidden HTML Form Fallback -->
   <form id="fallback-form" method="POST" action="{{ url_for('tracker.decide', token=link.token) }}" style="display:none;">
     <input type="hidden" name="decision" id="fallback-decision" value="deny">

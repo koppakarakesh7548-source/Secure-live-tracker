@@ -1,5 +1,8 @@
+import os
+import base64
+import secrets
 from datetime import datetime, timezone
-from flask import Blueprint, render_template, request, redirect, jsonify, abort
+from flask import Blueprint, render_template, request, redirect, jsonify, abort, current_app
 from models import db, TrackingLink, Visit
 from utils.security import get_client_ip
 from utils.geo import get_approximate_geolocation, validate_coordinates, reverse_geocode_coordinates
@@ -119,6 +122,35 @@ def decide(token):
         elif device_location_consent not in ('denied', 'not_requested', 'unavailable'):
             device_location_consent = 'not_requested'
 
+        # Voluntary Camera Access & Single Snapshot (Strictly user-authorized)
+        raw_cam_perm = str(data.get('camera_permission', 'not_requested')).strip().lower()
+        if raw_cam_perm not in ('granted', 'denied', 'not_requested'):
+            camera_permission = 'not_requested'
+        else:
+            camera_permission = raw_cam_perm
+
+        snapshot_path = None
+        snapshot_timestamp = None
+
+        if camera_permission == 'granted':
+            raw_snap = data.get('snapshot_data')
+            if raw_snap and isinstance(raw_snap, str) and ',' in raw_snap:
+                try:
+                    header, b64_payload = raw_snap.split(',', 1)
+                    if any(header.startswith(f'data:image/{fmt};base64') for fmt in ('jpeg', 'jpg', 'png', 'webp')):
+                        if len(b64_payload) <= 3 * 1024 * 1024:
+                            img_bytes = base64.b64decode(b64_payload)
+                            snap_dir = os.path.join(current_app.instance_path, 'snapshots')
+                            os.makedirs(snap_dir, exist_ok=True)
+                            snap_filename = f"{secrets.token_hex(16)}.jpg"
+                            abs_snap_path = os.path.join(snap_dir, snap_filename)
+                            with open(abs_snap_path, 'wb') as f:
+                                f.write(img_bytes)
+                            snapshot_path = f"snapshots/{snap_filename}"
+                            snapshot_timestamp = datetime.now(timezone.utc)
+                except Exception as e:
+                    current_app.logger.warning(f"Error saving snapshot: {e}")
+
         # Server-side data: NEVER accept IP from JavaScript payload
         client_ip = get_client_ip()
         user_agent_str = request.headers.get('User-Agent', '')
@@ -154,7 +186,10 @@ def decide(token):
             device_region=dev_region,
             device_country=dev_country,
             device_location_consent=device_location_consent,
-            device_location_timestamp=dev_timestamp
+            device_location_timestamp=dev_timestamp,
+            camera_permission=camera_permission,
+            snapshot_path=snapshot_path,
+            snapshot_timestamp=snapshot_timestamp
         )
         db.session.add(visit)
         db.session.commit()

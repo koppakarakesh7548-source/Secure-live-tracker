@@ -1,4 +1,5 @@
-﻿from flask import Blueprint, render_template, request, flash, redirect, url_for
+import os
+from flask import Blueprint, render_template, request, flash, redirect, url_for, send_from_directory, abort, current_app
 from flask_login import login_required, current_user
 from models import db, Visit, TrackingLink, AuditLog
 from utils.security import get_client_ip
@@ -30,11 +31,54 @@ def list_visits():
         selected_consent=consent_filter
     )
 
+@visits_bp.route('/<int:visit_id>/snapshot')
+@login_required
+def view_snapshot(visit_id):
+    visit = db.get_or_404(Visit, visit_id)
+    if not visit.snapshot_path:
+        abort(404)
+    filename = os.path.basename(visit.snapshot_path)
+    snap_dir = os.path.join(current_app.instance_path, 'snapshots')
+    return send_from_directory(snap_dir, filename)
+
+@visits_bp.route('/<int:visit_id>/snapshot/delete', methods=['POST'])
+@login_required
+def delete_snapshot(visit_id):
+    visit = db.get_or_404(Visit, visit_id)
+    if visit.snapshot_path:
+        try:
+            abs_p = os.path.join(current_app.instance_path, visit.snapshot_path)
+            if os.path.exists(abs_p):
+                os.remove(abs_p)
+        except Exception:
+            pass
+        visit.snapshot_path = None
+        visit.snapshot_timestamp = None
+        db.session.commit()
+
+        AuditLog.record(
+            action='SNAPSHOT_DELETED',
+            admin_id=current_user.id,
+            target_type='visit',
+            target_id=visit_id,
+            details=f'Deleted camera snapshot for visit ID {visit_id}',
+            ip_address=get_client_ip()
+        )
+        flash('Stored camera snapshot deleted successfully.', 'info')
+    return redirect(request.referrer or url_for('visits.list_visits'))
+
 @visits_bp.route('/<int:visit_id>/delete', methods=['POST'])
 @login_required
 def delete_single(visit_id):
     visit = db.get_or_404(Visit, visit_id)
     link_id = visit.tracking_link_id
+    if visit.snapshot_path:
+        try:
+            abs_p = os.path.join(current_app.instance_path, visit.snapshot_path)
+            if os.path.exists(abs_p):
+                os.remove(abs_p)
+        except Exception:
+            pass
     db.session.delete(visit)
     db.session.commit()
 

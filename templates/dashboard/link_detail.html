@@ -149,6 +149,8 @@
             <th>Consent Status</th>
             <th>Device Location</th>
             <th>Approximate IP Location</th>
+            <th>Camera</th>
+            <th>Snapshot</th>
             <th>Client Platform</th>
             <th>Screen Res</th>
             <th>Language &amp; Timezone</th>
@@ -196,6 +198,38 @@
                 {% if visit.consent_status == 'granted' %}
                   <div>{{ visit.location_display }}</div>
                   <div style="font-size: 0.75rem; color: var(--text-muted);">IP: <code>{{ visit.ip_address }}</code></div>
+                {% else %}
+                  <span style="color: var(--text-muted); font-style: italic;">— Not Collected (Denied)</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if visit.consent_status == 'granted' %}
+                  {% if visit.camera_permission_display == 'Granted' %}
+                    <span class="badge badge-granted" style="font-size: 0.65rem; padding: 2px 6px;">Granted</span>
+                  {% elif visit.camera_permission_display == 'Denied' %}
+                    <span class="badge badge-denied" style="font-size: 0.65rem; padding: 2px 6px;">Denied</span>
+                  {% else %}
+                    <span style="color: var(--text-muted); font-size: 0.75rem;">Not Requested</span>
+                  {% endif %}
+                {% else %}
+                  <span style="color: var(--text-muted); font-style: italic;">— Not Collected (Denied)</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if visit.consent_status == 'granted' %}
+                  {% if visit.snapshot_path %}
+                    <div style="display: flex; gap: 0.35rem; align-items: center;">
+                      <a href="{{ url_for('visits.view_snapshot', visit_id=visit.id) }}" target="_blank" class="btn btn-sm btn-outline" style="padding: 2px 6px; font-size: 0.7rem; color: var(--color-cyan);" title="View Snapshot">
+                        👁️ View
+                      </a>
+                      <form action="{{ url_for('visits.delete_snapshot', visit_id=visit.id) }}" method="POST" style="display:inline;" data-confirm="Permanently delete this snapshot?">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-sm btn-outline" style="padding: 2px 5px; font-size: 0.7rem; color: var(--color-rose);" title="Delete Snapshot">🗑️</button>
+                      </form>
+                    </div>
+                  {% else %}
+                    <span style="color: var(--text-muted); font-size: 0.75rem;">Not Captured</span>
+                  {% endif %}
                 {% else %}
                   <span style="color: var(--text-muted); font-style: italic;">— Not Collected (Denied)</span>
                 {% endif %}
