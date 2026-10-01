@@ -37,7 +37,7 @@ with application.app_context():
             db.session.add(TrackingLink(
                 token=token,
                 target_url=target,
-                title=title,
+                name=title,
                 created_by_id=admin.id
             ))
     db.session.commit()
