@@ -1,4 +1,6 @@
-﻿# Secure Live Tracker 🛡️
+# Secure Live Tracker 🛡️
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/koppakarakesh7548-source/Secure-live-tracker)
 
 **Secure Live Tracker** is a transparent, consent-first educational cybersecurity and security-awareness platform inspired by the operational mechanics of legitimate link-tracking and web-analytics services.
 
