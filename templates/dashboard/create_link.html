@@ -1,0 +1,56 @@
+﻿{% extends "base.html" %}
+
+{% block title %}Create Tracking Link{% endblock %}
+
+{% block content %}
+<div style="max-width: 680px; margin: 0 auto;">
+  <div style="margin-bottom: 1.5rem;">
+    <a href="{{ url_for('links.list_links') }}" class="btn btn-sm btn-outline">&larr; Back to My Links</a>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h1 class="card-title"><span>✨</span> Generate Tracking Link</h1>
+    </div>
+
+    <form method="POST" action="{{ url_for('links.create') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+      <div class="form-group">
+        <label for="name" class="form-label">Link Name / Campaign Title <span style="color: var(--color-rose);">*</span></label>
+        <input type="text" id="name" name="name" class="form-control" placeholder="e.g. Cybersecurity Awareness Q3 Simulation" value="{{ form_data.get('name', '') }}" required>
+        <div class="form-help">A descriptive internal name to identify this tracking link in reports.</div>
+      </div>
+
+      <div class="form-group">
+        <label for="target_url" class="form-label">Target URL (Destination) <span style="color: var(--color-rose);">*</span></label>
+        <input type="url" id="target_url" name="target_url" class="form-control" placeholder="https://example.com/product" value="{{ form_data.get('target_url', '') }}" required>
+        <div class="form-help">Must begin with <code>http://</code> or <code>https://</code>. Visitors will be redirected here after their consent decision.</div>
+      </div>
+
+      <div class="form-group">
+        <label for="description" class="form-label">Description / Scope (Optional)</label>
+        <textarea id="description" name="description" class="form-control" placeholder="Brief notes regarding the authorized scope or training context for this link...">{{ form_data.get('description', '') }}</textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="expires_at" class="form-label">Expiration Date &amp; Time (Optional)</label>
+        <input type="datetime-local" id="expires_at" name="expires_at" class="form-control" value="{{ form_data.get('expires_at', '') }}">
+        <div class="form-help">Leave blank for an indefinite campaign. Once expired, visitors will see a professional expired-link notice.</div>
+      </div>
+
+      <div style="background-color: #0b1120; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1rem; margin: 1.5rem 0; font-size: 0.85rem; color: var(--text-secondary);">
+        <p style="font-weight: 600; color: var(--color-cyan); margin-bottom: 0.35rem;">🛡️ Security &amp; Token Architecture:</p>
+        <p>A cryptographically secure random token (e.g. <code>AbC92Kx810</code>) will be generated. Database internal IDs are never exposed in public tracking URLs.</p>
+      </div>
+
+      <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+        <button type="submit" class="btn btn-primary btn-lg" style="flex: 1;">
+          <span>Generate Secure Link</span> &rarr;
+        </button>
+        <a href="{{ url_for('links.list_links') }}" class="btn btn-outline btn-lg">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

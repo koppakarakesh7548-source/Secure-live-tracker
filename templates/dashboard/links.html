@@ -1,0 +1,155 @@
+﻿{% extends "base.html" %}
+
+{% block title %}My Tracking Links{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+  <div>
+    <h1 style="font-size: 1.75rem; font-weight: 800; letter-spacing: -0.02em;">Managed Tracking Links</h1>
+    <p style="font-size: 0.88rem; color: var(--text-secondary);">Create, copy, monitor, disable, or delete active telemetry tracking links.</p>
+  </div>
+  <a href="{{ url_for('links.create') }}" class="btn btn-primary">
+    <span>+ Create New Link</span>
+  </a>
+</div>
+
+<!-- Search & Filtering Bar (Section 12 Requirement) -->
+<div class="card" style="padding: 1.25rem; margin-bottom: 1.5rem;">
+  <form method="GET" action="{{ url_for('links.list_links') }}" style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
+    <div style="flex: 2; min-width: 220px;">
+      <label class="form-label" for="q">Search by Name, Token, or Destination</label>
+      <input type="text" id="q" name="q" class="form-control" placeholder="Search tracking campaigns..." value="{{ search_query }}">
+    </div>
+
+    <div style="flex: 1; min-width: 160px;">
+      <label class="form-label" for="status">Filter by Status</label>
+      <select name="status" id="status" class="form-control">
+        <option value="">-- All Statuses --</option>
+        <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active Only</option>
+        <option value="disabled" {% if status_filter == 'disabled' %}selected{% endif %}>Disabled Only</option>
+        <option value="expired" {% if status_filter == 'expired' %}selected{% endif %}>Expired Only</option>
+      </select>
+    </div>
+
+    <div>
+      <button type="submit" class="btn btn-primary">Filter</button>
+      <a href="{{ url_for('links.list_links') }}" class="btn btn-outline">Reset</a>
+    </div>
+  </form>
+</div>
+
+<!-- Tracking Links Table -->
+<div class="card">
+  <div class="card-header">
+    <h2 class="card-title"><span>📋</span> Campaigns ({{ links|length }})</h2>
+    <span style="font-size: 0.8rem; color: var(--color-cyan);">Public Base: {{ public_base_url }}</span>
+  </div>
+
+  {% if links %}
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Link Name</th>
+            <th>Shareable Public Tracking Link</th>
+            <th>Target Destination</th>
+            <th>Status</th>
+            <th>Created</th>
+            <th>Expiration</th>
+            <th>Visits</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for link in links %}
+            <tr>
+              <td style="font-weight: 600;">
+                <a href="{{ url_for('links.detail', link_id=link.id) }}" style="color: var(--text-primary); text-decoration: none;">
+                  {{ link.name }}
+                </a>
+                {% if link.description %}
+                  <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                    {{ link.description }}
+                  </div>
+                {% endif %}
+              </td>
+              <td>
+                <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                  <code style="word-break: break-all; font-size: 0.78rem;">{{ public_base_url }}/track/{{ link.token }}</code>
+                  <div style="display: flex; gap: 0.35rem; margin-top: 0.2rem;">
+                    <button type="button" class="btn btn-sm btn-outline" data-copy-url="{{ public_base_url }}/track/{{ link.token }}" title="Copy shareable tracking link">
+                      📋 Copy Link
+                    </button>
+                    <a href="{{ public_base_url }}/track/{{ link.token }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline" title="Open tracking consent page in new tab">
+                      ↗️ Open
+                    </a>
+                  </div>
+                </div>
+              </td>
+              <td style="max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                <a href="{{ link.target_url }}" target="_blank" rel="noopener noreferrer" style="color: var(--color-cyan); text-decoration: none;">
+                  {{ link.target_url }}
+                </a>
+              </td>
+              <td>
+                {% if not link.active %}
+                  <span class="badge badge-disabled">Disabled</span>
+                {% elif link.is_expired() %}
+                  <span class="badge badge-expired">Expired</span>
+                {% else %}
+                  <span class="badge badge-active">Active</span>
+                {% endif %}
+              </td>
+              <td style="font-family: var(--font-mono); font-size: 0.8rem; white-space: nowrap;">
+                {{ link.created_at.strftime('%Y-%m-%d') }}
+              </td>
+              <td style="font-family: var(--font-mono); font-size: 0.8rem; white-space: nowrap;">
+                {% if link.expires_at %}
+                  {{ link.expires_at.strftime('%Y-%m-%d %H:%M') }}
+                {% else %}
+                  <span style="color: var(--text-muted);">Indefinite</span>
+                {% endif %}
+              </td>
+              <td>
+                <div style="font-size: 0.85rem;">
+                  <strong>{{ link.total_visits }}</strong> visits
+                </div>
+                <div style="font-size: 0.75rem; display: flex; gap: 0.4rem;">
+                  <span style="color: #34d399;">✓ {{ link.consent_granted_count }}</span>
+                  <span style="color: #fbbf24;">✗ {{ link.consent_denied_count }}</span>
+                </div>
+              </td>
+              <td>
+                <div style="display: flex; gap: 0.35rem; align-items: center; flex-wrap: wrap;">
+                  <a href="{{ url_for('links.detail', link_id=link.id) }}" class="btn btn-sm btn-outline" title="View Detailed Analytics & Records">
+                    View
+                  </a>
+
+                  <form action="{{ url_for('links.toggle', link_id=link.id) }}" method="POST" style="display:inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-sm {% if link.active %}btn-outline{% else %}btn-success{% endif %}" title="{% if link.active %}Disable public URL{% else %}Enable public URL{% endif %}">
+                      {% if link.active %}Disable{% else %}Enable{% endif %}
+                    </button>
+                  </form>
+
+                  <form action="{{ url_for('links.delete', link_id=link.id) }}" method="POST" style="display:inline;" data-confirm="Are you sure you want to permanently delete '{{ link.name }}'? All associated visit logs will be erased.">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-sm btn-danger" title="Permanently Delete">
+                      &times;
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div style="text-align: center; padding: 3rem 1rem;">
+      <p style="font-size: 1.1rem; color: var(--text-secondary); margin-bottom: 1rem;">No tracking links match the specified criteria.</p>
+      <a href="{{ url_for('links.create') }}" class="btn btn-primary">+ Generate New Tracking Link</a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

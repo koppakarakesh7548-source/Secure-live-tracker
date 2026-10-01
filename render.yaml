@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: secure-live-tracker
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn wsgi:application
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: secure-tracker-db
+          property: connectionString
+      - key: ADMIN_USERNAME
+        value: admin
+      - key: ADMIN_PASSWORD
+        value: AdminPass123!
+      - key: BEHIND_PROXY
+        value: "True"
+      - key: GEOLOCATION_PROVIDER
+        value: ipinfo
+      - key: GEOLOCATION_FALLBACK_PROVIDER
+        value: ip-api
+
+databases:
+  - name: secure-tracker-db
+    databaseName: secure_tracker
+    user: tracker_user
+    plan: free

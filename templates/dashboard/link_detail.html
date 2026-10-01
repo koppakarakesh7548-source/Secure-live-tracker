@@ -1,0 +1,264 @@
+{% extends "base.html" %}
+
+{% block title %}{{ link.name }} — Link Details{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 1.5rem;">
+  <a href="{{ url_for('links.list_links') }}" class="btn btn-sm btn-outline">&larr; Back to My Links</a>
+</div>
+
+<!-- Header Card -->
+<div class="card">
+  <div class="card-header">
+    <div>
+      <h1 class="card-title">{{ link.name }}</h1>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;">
+        Token: <code>{{ link.token }}</code> &bull; Created: {{ link.created_at.strftime('%Y-%m-%d %H:%M:%S UTC') }}
+      </p>
+    </div>
+    <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+      {% if not link.active %}
+        <span class="badge badge-disabled">Disabled</span>
+      {% elif link.is_expired() %}
+        <span class="badge badge-expired">Expired</span>
+      {% else %}
+        <span class="badge badge-active">Active</span>
+      {% endif %}
+
+      <a href="{{ public_base_url }}/track/{{ link.token }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline">
+        ↗️ Open Public Link
+      </a>
+
+      <form action="{{ url_for('links.toggle', link_id=link.id) }}" method="POST" style="display:inline;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn btn-sm {% if link.active %}btn-outline{% else %}btn-success{% endif %}">
+          {% if link.active %}Disable Public Link{% else %}Enable Public Link{% endif %}
+        </button>
+      </form>
+
+      <form action="{{ url_for('links.delete', link_id=link.id) }}" method="POST" style="display:inline;" data-confirm="Are you sure you want to permanently delete this link and all associated visit logs?">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn btn-sm btn-danger">Delete Link</button>
+      </form>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem;">
+    <!-- Public Tracking Link Section -->
+    <div style="background-color: #0b1120; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.25rem;">
+      <div class="stat-label">Public HTTPS Tracking Link (For Sharing)</div>
+      <div style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem;">
+        <input type="text" class="form-control" value="{{ public_base_url }}/track/{{ link.token }}" readonly style="font-family: var(--font-mono); font-size: 0.82rem;">
+        <button type="button" class="btn btn-primary" data-copy-url="{{ public_base_url }}/track/{{ link.token }}">Copy</button>
+      </div>
+      <div style="font-size: 0.75rem; color: var(--color-cyan); margin-top: 0.35rem;">
+        Workable from external mobile devices, tablets, and remote networks.
+      </div>
+    </div>
+
+    <!-- Destination Target Section -->
+    <div style="background-color: #0b1120; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.25rem;">
+      <div class="stat-label">Target Destination URL</div>
+      <div style="margin-top: 0.5rem; word-break: break-all;">
+        <a href="{{ link.target_url }}" target="_blank" rel="noopener noreferrer" style="color: var(--color-cyan); font-size: 0.9rem; text-decoration: none;">
+          {{ link.target_url }} &nearr;
+        </a>
+      </div>
+      <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.35rem;">
+        Verified safe protocol (HTTP/HTTPS). Destination cannot be manipulated by query parameters.
+      </div>
+    </div>
+  </div>
+
+  <!-- Expiration Management Form -->
+  <div style="background-color: #0f182c; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.25rem; margin-bottom: 1.5rem;">
+    <h3 style="font-size: 0.92rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.5rem;">
+      ⏳ Set / Update Campaign Expiration
+    </h3>
+    <form method="POST" action="{{ url_for('links.set_expiration', link_id=link.id) }}" style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div style="flex: 1; min-width: 220px;">
+        <label class="form-label" for="expires_at">Expiration Date &amp; Time (UTC)</label>
+        <input type="datetime-local" id="expires_at" name="expires_at" class="form-control" value="{% if link.expires_at %}{{ link.expires_at.strftime('%Y-%m-%dT%H:%M') }}{% endif %}">
+      </div>
+      <div>
+        <button type="submit" class="btn btn-primary">Update Expiration</button>
+      </div>
+      <div style="font-size: 0.78rem; color: var(--text-muted); width: 100%;">
+        Leave empty and save to allow indefinite access.
+      </div>
+    </form>
+  </div>
+
+  {% if link.description %}
+    <div style="font-size: 0.88rem; color: var(--text-secondary); background-color: rgba(2, 6, 23, 0.4); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+      <strong>Description / Scope:</strong> {{ link.description }}
+    </div>
+  {% endif %}
+</div>
+
+<!-- Statistics Grid -->
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-label">Total Visits</div>
+    <div class="stat-value">{{ total_count }}</div>
+  </div>
+  <div class="stat-card" style="border-left: 3px solid var(--color-emerald);">
+    <div class="stat-label">Consent Granted</div>
+    <div class="stat-value" style="color: #34d399;">{{ granted_count }}</div>
+    <span class="stat-badge badge-granted">{{ consent_pct }}% Ratio</span>
+  </div>
+  <div class="stat-card" style="border-left: 3px solid var(--color-amber);">
+    <div class="stat-label">Consent Denied</div>
+    <div class="stat-value" style="color: #fbbf24;">{{ denied_count }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Expiration Status</div>
+    <div class="stat-value" style="font-size: 1.15rem;">
+      {% if link.expires_at %}
+        {{ link.expires_at.strftime('%Y-%m-%d %H:%M UTC') }}
+      {% else %}
+        Indefinite
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Visit Activity Table -->
+<div class="card">
+  <div class="card-header">
+    <h2 class="card-title"><span>📜</span> Associated Visit Records ({{ visits|length }})</h2>
+    {% if visits %}
+      <form action="{{ url_for('visits.purge_link_visits', link_id=link.id) }}" method="POST" data-confirm="Are you sure you want to purge all visit records for this link? This action cannot be undone.">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn btn-sm btn-danger">Purge Visits for this Link</button>
+      </form>
+    {% endif %}
+  </div>
+
+  <div style="margin-bottom: 1rem; font-size: 0.78rem; color: var(--text-muted);">
+    * Approximate location based on IP. This is not precise GPS location.
+  </div>
+
+  {% if visits %}
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Timestamp (UTC)</th>
+            <th>Consent Status</th>
+            <th>Device Location</th>
+            <th>Approximate IP Location</th>
+            <th>Client Platform</th>
+            <th>Screen Res</th>
+            <th>Language &amp; Timezone</th>
+            <th>Battery</th>
+            <th>Charging</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for visit in visits %}
+            <tr>
+              <td style="font-family: var(--font-mono); font-size: 0.8rem; white-space: nowrap;">
+                {{ visit.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}
+              </td>
+              <td>
+                {% if visit.consent_status == 'granted' %}
+                  <span class="badge badge-granted">CONSENT GRANTED</span>
+                {% else %}
+                  <span class="badge badge-denied">CONSENT DENIED</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if visit.consent_status == 'granted' %}
+                  <div style="font-weight: 600;">{{ visit.device_location_display }}</div>
+                  <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">
+                    Accuracy: <span style="color: var(--text-primary);">{{ visit.device_accuracy_display }}</span>
+                  </div>
+                  <div style="font-size: 0.72rem; margin-top: 2px;">
+                    Permission:
+                    {% if visit.device_permission_display == 'Granted' %}
+                      <span class="badge badge-granted" style="font-size: 0.65rem; padding: 2px 6px;">Granted</span>
+                    {% elif visit.device_permission_display == 'Denied' %}
+                      <span class="badge badge-denied" style="font-size: 0.65rem; padding: 2px 6px;">Denied</span>
+                    {% elif visit.device_permission_display == 'Unavailable' %}
+                      <span class="badge badge-disabled" style="font-size: 0.65rem; padding: 2px 6px;">Unavailable</span>
+                    {% else %}
+                      <span style="color: var(--text-muted);">Not requested</span>
+                    {% endif %}
+                  </div>
+                {% else %}
+                  <span style="color: var(--text-muted); font-style: italic;">— Not Collected (Denied)</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if visit.consent_status == 'granted' %}
+                  <div>{{ visit.location_display }}</div>
+                  <div style="font-size: 0.75rem; color: var(--text-muted);">IP: <code>{{ visit.ip_address }}</code></div>
+                {% else %}
+                  <span style="color: var(--text-muted); font-style: italic;">— Not Collected (Denied)</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if visit.consent_status == 'granted' %}
+                  {{ visit.browser or 'Unknown' }} on {{ visit.operating_system or 'Unknown' }}
+                {% else %}
+                  <span style="color: var(--text-muted); font-style: italic;">— Not Collected (Denied)</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if visit.consent_status == 'granted' and visit.screen_resolution %}
+                  <code>{{ visit.screen_resolution }}</code>
+                {% else %}
+                  <span style="color: var(--text-muted); font-style: italic;">—</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if visit.consent_status == 'granted' %}
+                  <div style="font-size: 0.8rem;">{{ visit.language or '—' }}</div>
+                  <div style="font-size: 0.75rem; color: var(--text-muted);">{{ visit.timezone or '—' }}</div>
+                {% else %}
+                  <span style="color: var(--text-muted); font-style: italic;">—</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if visit.consent_status == 'granted' %}
+                  {% if visit.battery_percentage is not none %}
+                    <span style="font-weight: 600; color: #34d399;">{{ visit.battery_display }}</span>
+                  {% else %}
+                    <span style="color: var(--text-muted);">Not available</span>
+                  {% endif %}
+                {% else %}
+                  <span style="color: var(--text-muted); font-style: italic;">— Not Collected (Denied)</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if visit.consent_status == 'granted' %}
+                  {% if visit.battery_charging is not none %}
+                    <span style="font-weight: 600;">{{ visit.charging_display }}</span>
+                  {% else %}
+                    <span style="color: var(--text-muted);">Not available</span>
+                  {% endif %}
+                {% else %}
+                  <span style="color: var(--text-muted); font-style: italic;">— Not Collected (Denied)</span>
+                {% endif %}
+              </td>
+              <td>
+                <form action="{{ url_for('visits.delete_single', visit_id=visit.id) }}" method="POST" style="display:inline;" data-confirm="Delete this individual visit record?">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="btn btn-sm btn-outline" style="color: var(--color-rose);" title="Delete record">&times;</button>
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p style="font-size: 0.9rem; color: var(--text-muted); text-align: center; padding: 2rem 0;">
+      No visits have been logged for this tracking link yet.
+    </p>
+  {% endif %}
+</div>
+{% endblock %}

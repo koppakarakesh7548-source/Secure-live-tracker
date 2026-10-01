@@ -1,0 +1,108 @@
+﻿{% extends "base.html" %}
+
+{% block title %}Consent-Based Cybersecurity Awareness{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <div class="hero-badge">
+    <span>🛡️</span> Transparent &bull; Consent-Driven &bull; Educational
+  </div>
+  <h1 class="hero-title">SECURE LIVE TRACKER</h1>
+  <p class="hero-desc">
+    An educational cybersecurity and security-awareness platform inspired by legitimate web analytics and link-tracking workflows. Designed with zero-covert tracking, explicit visitor consent, and strict privacy boundaries.
+  </p>
+  <div style="display:flex; justify-content:center; gap:1rem; flex-wrap:wrap;">
+    <a href="{{ url_for('auth.login') }}" class="btn btn-lg btn-primary">Admin Command Center</a>
+    <a href="{{ url_for('public.privacy_info') }}" class="btn btn-lg btn-outline">Privacy Architecture</a>
+  </div>
+</section>
+
+<!-- Responsible Use Callout Banner -->
+<div class="responsible-banner">
+  <p style="font-weight: 700; margin-bottom: 0.35rem; color: #fff;">
+    ⚠️ MANDATORY RESPONSIBLE USE NOTICE:
+  </p>
+  <p>
+    This service is intended for authorized educational, security-testing, and security-awareness purposes. Use only with appropriate consent and authorization. Do not use this service to secretly monitor, impersonate, compromise, or collect information from people or systems without authorization.
+  </p>
+</div>
+
+<!-- Primary Workflow Demonstration -->
+<div class="card" style="margin-top: 3rem;">
+  <div class="card-header">
+    <h2 class="card-title"><span>🔄</span> Transparent Lifecycle Workflow</h2>
+  </div>
+  <div class="workflow-steps">
+    <div class="step-card">
+      <div class="step-num">1</div>
+      <h3 class="step-title">Admin Configuration</h3>
+      <p class="step-desc">
+        The administrator inputs a verified target URL and generates a cryptographically secure random tracking token (e.g. <code>/track/AbC92Kx8</code>). Database IDs are never exposed in public URLs.
+      </p>
+    </div>
+
+    <div class="step-card">
+      <div class="step-num">2</div>
+      <h3 class="step-title">Consent Gate</h3>
+      <p class="step-desc">
+        When opened, the visitor is presented with an un-obfuscated consent page. No data is collected upfront, and no camera, mic, or GPS permissions are ever requested.
+      </p>
+    </div>
+
+    <div class="step-card">
+      <div class="step-num">3</div>
+      <h3 class="step-title">Visitor Decision</h3>
+      <p class="step-desc">
+        The visitor freely selects <strong>[ Allow & Continue ]</strong> or <strong>[ Deny & Continue ]</strong>. Both choices immediately forward the visitor to the target destination.
+      </p>
+    </div>
+
+    <div class="step-card">
+      <div class="step-num">4</div>
+      <h3 class="step-title">Governed Logging</h3>
+      <p class="step-desc">
+        If Allowed, limited technical metrics (approximate IP location, screen size, OS) are saved. If Denied, zero optional technical information is recorded.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- Privacy Guarantees Grid -->
+<div class="card">
+  <div class="card-header">
+    <h2 class="card-title"><span>🔒</span> Privacy & Ethical Boundaries</h2>
+  </div>
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+    <div style="background-color: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: var(--radius-md); padding: 1.25rem;">
+      <h3 style="color: #34d399; font-size: 1rem; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
+        <span>✓</span> Information Permitted After Consent
+      </h3>
+      <ul style="font-size: 0.85rem; color: var(--text-secondary); margin-left: 1.25rem; line-height: 1.6;">
+        <li>IP address for approximate regional lookup</li>
+        <li>Approximate Country, Region, and City</li>
+        <li>Browser family &amp; Operating System</li>
+        <li>Screen dimensions (width &times; height)</li>
+        <li>Browser language &amp; Timezone</li>
+        <li>Visit timestamp and link identifier</li>
+      </ul>
+      <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.75rem; font-style: italic;">
+        *All location lookups are approximate IP geolocations, NOT precise GPS coordinates.
+      </p>
+    </div>
+
+    <div style="background-color: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: var(--radius-md); padding: 1.25rem;">
+      <h3 style="color: #f87171; font-size: 1rem; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
+        <span>✗</span> Strictly Prohibited &amp; Never Collected
+      </h3>
+      <ul style="font-size: 0.85rem; color: var(--text-secondary); margin-left: 1.25rem; line-height: 1.6;">
+        <li>Zero camera, microphone, or precise GPS prompts</li>
+        <li>Zero credentials, passwords, or session tokens</li>
+        <li>Zero browser history, cookies, or local files</li>
+        <li>Zero keystrokes or clipboard access</li>
+        <li>Zero covert canvas or audio device fingerprinting</li>
+        <li>Zero attempts to uniquely identify individuals</li>
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %}

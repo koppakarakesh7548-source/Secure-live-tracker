@@ -1,0 +1,216 @@
+{% extends "base.html" %}
+
+{% block title %}Visit Records Telemetry{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+  <div>
+    <h1 style="font-size: 1.75rem; font-weight: 800; letter-spacing: -0.02em;">Visitor Records Telemetry</h1>
+    <p style="font-size: 0.88rem; color: var(--text-secondary);">Audit log of permitted technical events and consent decisions.</p>
+  </div>
+</div>
+
+<!-- Filters Bar -->
+<div class="card" style="padding: 1.25rem; margin-bottom: 1.5rem;">
+  <form method="GET" action="{{ url_for('visits.list_visits') }}" style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
+    <div style="flex: 1; min-width: 200px;">
+      <label class="form-label" for="link_id">Filter by Tracking Link</label>
+      <select name="link_id" id="link_id" class="form-control">
+        <option value="">-- All Tracking Links --</option>
+        {% for link in all_links %}
+          <option value="{{ link.id }}" {% if selected_link_id == link.id %}selected{% endif %}>
+            {{ link.name }} ({{ link.token }})
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div style="flex: 1; min-width: 180px;">
+      <label class="form-label" for="consent">Filter by Consent Status</label>
+      <select name="consent" id="consent" class="form-control">
+        <option value="">-- All Decisions --</option>
+        <option value="granted" {% if selected_consent == 'granted' %}selected{% endif %}>Consent Granted Only</option>
+        <option value="denied" {% if selected_consent == 'denied' %}selected{% endif %}>Consent Denied Only</option>
+      </select>
+    </div>
+
+    <div>
+      <button type="submit" class="btn btn-primary">Filter</button>
+      <a href="{{ url_for('visits.list_visits') }}" class="btn btn-outline">Reset</a>
+    </div>
+  </form>
+</div>
+
+<!-- Records Table -->
+<div class="card">
+  <div class="card-header">
+    <h2 class="card-title"><span>📜</span> Recorded Visits ({{ visits|length }})</h2>
+    <span style="font-size: 0.8rem; color: var(--color-cyan);">Privacy Compliant</span>
+  </div>
+
+  <div style="background-color: var(--color-cyan-bg); border-left: 3px solid var(--color-cyan); padding: 0.65rem 1rem; border-radius: var(--radius-sm); margin-bottom: 1.25rem; font-size: 0.82rem; color: #bae6fd;">
+    <strong>Mandatory Notice:</strong> Approximate location based on IP. This is not precise GPS location. Unconsented rows strictly omit optional parameters.
+  </div>
+
+  {% if visits %}
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Date/Time</th>
+            <th>Tracking Link</th>
+            <th>Consent</th>
+            <th>IP Address</th>
+            <th>Device Location</th>
+            <th>Approximate IP Location</th>
+            <th>Browser</th>
+            <th>OS</th>
+            <th>Screen Resolution</th>
+            <th>Language</th>
+            <th>Timezone</th>
+            <th>Battery</th>
+            <th>Charging</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for visit in visits %}
+            <tr>
+              <td style="font-family: var(--font-mono); font-size: 0.8rem; white-space: nowrap;">
+                {{ visit.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}
+              </td>
+              <td>
+                {% if visit.tracking_link %}
+                  <a href="{{ url_for('links.detail', link_id=visit.tracking_link_id) }}" style="color: var(--text-primary); text-decoration: none; font-weight: 600;">
+                    {{ visit.tracking_link.name }}
+                  </a>
+                  <div style="font-size: 0.75rem; color: var(--text-muted);"><code>/track/{{ visit.tracking_link.token }}</code></div>
+                {% else %}
+                  <span style="color: var(--text-muted); font-style: italic;">Deleted Link</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if visit.consent_status == 'granted' %}
+                  <span class="badge badge-granted">CONSENT GRANTED</span>
+                {% else %}
+                  <span class="badge badge-denied">CONSENT DENIED</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if visit.consent_status == 'granted' %}
+                  <code>{{ visit.ip_address }}</code>
+                {% else %}
+                  <span style="color: var(--text-muted); font-style: italic;">— Not Collected (Denied)</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if visit.consent_status == 'granted' %}
+                  <div style="font-size: 0.85rem; font-weight: 600;">{{ visit.device_location_display }}</div>
+                  <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">
+                    Accuracy: <span style="color: var(--text-primary);">{{ visit.device_accuracy_display }}</span>
+                  </div>
+                  <div style="font-size: 0.72rem; margin-top: 2px;">
+                    Location Permission: 
+                    {% if visit.device_permission_display == 'Granted' %}
+                      <span class="badge badge-granted" style="font-size: 0.65rem; padding: 2px 6px;">Granted</span>
+                    {% elif visit.device_permission_display == 'Denied' %}
+                      <span class="badge badge-denied" style="font-size: 0.65rem; padding: 2px 6px;">Denied</span>
+                    {% elif visit.device_permission_display == 'Unavailable' %}
+                      <span class="badge badge-disabled" style="font-size: 0.65rem; padding: 2px 6px;">Unavailable</span>
+                    {% else %}
+                      <span style="color: var(--text-muted);">Not requested</span>
+                    {% endif %}
+                  </div>
+                {% else %}
+                  <span style="color: var(--text-muted); font-style: italic;">— Not Collected (Denied)</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if visit.consent_status == 'granted' %}
+                  <div style="font-size: 0.85rem; font-weight: 500;">{{ visit.location_display }}</div>
+                  <div style="font-size: 0.72rem; color: var(--text-muted);">
+                    Approximate IP Geolocation{% if visit.geolocation_provider %} &bull; {{ visit.geolocation_provider }}{% endif %}
+                  </div>
+                {% else %}
+                  <span style="color: var(--text-muted); font-style: italic;">— Not Collected (Denied)</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if visit.consent_status == 'granted' %}
+                  {{ visit.browser or 'Unknown' }}
+                {% else %}
+                  <span style="color: var(--text-muted); font-style: italic;">— Not Collected (Denied)</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if visit.consent_status == 'granted' %}
+                  {{ visit.operating_system or 'Unknown' }}
+                {% else %}
+                  <span style="color: var(--text-muted); font-style: italic;">— Not Collected (Denied)</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if visit.consent_status == 'granted' and visit.screen_resolution %}
+                  <code>{{ visit.screen_resolution }}</code>
+                {% elif visit.consent_status == 'granted' %}
+                  <span style="color: var(--text-muted);">Not available</span>
+                {% else %}
+                  <span style="color: var(--text-muted); font-style: italic;">— Not Collected (Denied)</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if visit.consent_status == 'granted' %}
+                  {{ visit.language or '—' }}
+                {% else %}
+                  <span style="color: var(--text-muted); font-style: italic;">— Not Collected (Denied)</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if visit.consent_status == 'granted' %}
+                  <div style="max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                    {{ visit.timezone or '—' }}
+                  </div>
+                {% else %}
+                  <span style="color: var(--text-muted); font-style: italic;">— Not Collected (Denied)</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if visit.consent_status == 'granted' %}
+                  {% if visit.battery_percentage is not none %}
+                    <span style="font-weight: 600; color: #34d399;">{{ visit.battery_display }}</span>
+                  {% else %}
+                    <span style="color: var(--text-muted);">Not available</span>
+                  {% endif %}
+                {% else %}
+                  <span style="color: var(--text-muted); font-style: italic;">— Not Collected (Denied)</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if visit.consent_status == 'granted' %}
+                  {% if visit.battery_charging is not none %}
+                    <span style="font-weight: 600;">{{ visit.charging_display }}</span>
+                  {% else %}
+                    <span style="color: var(--text-muted);">Not available</span>
+                  {% endif %}
+                {% else %}
+                  <span style="color: var(--text-muted); font-style: italic;">— Not Collected (Denied)</span>
+                {% endif %}
+              </td>
+              <td>
+                <form action="{{ url_for('visits.delete_single', visit_id=visit.id) }}" method="POST" style="display:inline;" data-confirm="Delete this individual visit record?">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="btn btn-sm btn-outline" style="color: var(--color-rose);" title="Delete record">&times;</button>
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p style="font-size: 0.9rem; color: var(--text-muted); text-align: center; padding: 2.5rem 0;">
+      No visitor records match the specified filters.
+    </p>
+  {% endif %}
+</div>
+{% endblock %}

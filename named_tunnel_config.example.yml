@@ -1,0 +1,11 @@
+# Cloudflare Named Tunnel Configuration Example
+# Replace <TUNNEL_UUID> with your Cloudflare Tunnel ID
+# Replace tracker.yourdomain.com with your stable custom hostname
+
+tunnel: <TUNNEL_UUID>
+credentials-file: C:\Users\DELL\.cloudflared\<TUNNEL_UUID>.json
+
+ingress:
+  - hostname: tracker.yourdomain.com
+    service: http://127.0.0.1:5000
+  - service: http_status:404

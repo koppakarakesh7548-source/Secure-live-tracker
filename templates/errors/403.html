@@ -1,0 +1,14 @@
+﻿{% extends "base.html" %}
+{% block title %}403 — Access Prohibited{% endblock %}
+{% block content %}
+<div class="consent-wrapper" style="text-align: center;">
+  <div class="card" style="padding: 3rem 2rem;">
+    <h1 style="font-size: 2.5rem; font-weight: 800; color: var(--color-rose);">403</h1>
+    <h2 style="font-size: 1.25rem; margin: 0.5rem 0 1rem;">Access Prohibited</h2>
+    <p style="color: var(--text-secondary); max-width: 480px; margin: 0 auto 1.5rem;">
+      You do not possess the required administrator privileges to view this protected resource.
+    </p>
+    <a href="{{ url_for('auth.login') }}" class="btn btn-primary">Sign In with Credentials</a>
+  </div>
+</div>
+{% endblock %}

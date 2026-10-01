@@ -1,0 +1,14 @@
+﻿{% extends "base.html" %}
+{% block title %}429 — Rate Limit Exceeded{% endblock %}
+{% block content %}
+<div class="consent-wrapper" style="text-align: center;">
+  <div class="card" style="padding: 3rem 2rem;">
+    <h1 style="font-size: 2.5rem; font-weight: 800; color: var(--color-amber);">429</h1>
+    <h2 style="font-size: 1.25rem; margin: 0.5rem 0 1rem;">Rate Limit Exceeded</h2>
+    <p style="color: var(--text-secondary); max-width: 480px; margin: 0 auto 1.5rem;">
+      Too many requests have been originated from your IP address. Please slow down and try again shortly.
+    </p>
+    <a href="{{ url_for('public.index') }}" class="btn btn-outline">&larr; Return to Home</a>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,26 @@
+﻿{% extends "base.html" %}
+
+{% block title %}Link Not Found (404){% endblock %}
+
+{% block content %}
+<div class="consent-wrapper">
+  <div class="consent-card">
+    <div class="consent-icon" style="border-color: var(--color-amber); color: var(--color-amber); background: var(--color-amber-bg);">🔍</div>
+    <h1 class="consent-title">TRACKING LINK NOT FOUND</h1>
+    <div class="consent-subtitle" style="color: #fbbf24;">HTTP 404 &bull; Unknown Identifier</div>
+
+    <div class="consent-statement" style="text-align: center;">
+      <p style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem;">
+        The tracking link token <code>{{ token }}</code> does not correspond to an active tracking campaign.
+      </p>
+      <p style="font-size: 0.88rem; color: var(--text-secondary);">
+        Please verify the URL or contact the demonstration organizer.
+      </p>
+    </div>
+
+    <div style="margin-top: 1.5rem;">
+      <a href="{{ url_for('public.index') }}" class="btn btn-outline">&larr; Return to Platform Home</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

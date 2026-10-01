@@ -1,0 +1,101 @@
+﻿{% extends "base.html" %}
+
+{% block title %}Privacy Management &amp; Data Governance{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+  <div>
+    <h1 style="font-size: 1.75rem; font-weight: 800; letter-spacing: -0.02em;">Privacy Management &amp; Data Governance</h1>
+    <p style="font-size: 0.88rem; color: var(--text-secondary);">Manage data retention cycles, privacy policies, and lifecycle sanitization.</p>
+  </div>
+</div>
+
+<!-- Data Retention Governance Card -->
+<div class="card">
+  <div class="card-header">
+    <h2 class="card-title"><span>⏳</span> Data Retention &amp; Auto-Purge Configuration</h2>
+    <span class="badge badge-active">{{ retention_days }} Days Policy Active</span>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem;">
+    <div style="background-color: #0b1120; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.25rem;">
+      <h3 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--text-primary);">Update Retention Horizon</h3>
+      <p style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 1rem;">
+        Specify how long visit records should be kept. Do not retain data indefinitely.
+      </p>
+
+      <form method="POST" action="{{ url_for('dashboard.settings') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="action_type" value="update_retention">
+
+        <div class="form-group">
+          <label class="form-label" for="retention_days">Maximum Retention Window (Days)</label>
+          <div style="display: flex; gap: 0.5rem;">
+            <input type="number" id="retention_days" name="retention_days" class="form-control" value="{{ retention_days }}" min="1" max="365" required>
+            <button type="submit" class="btn btn-primary">Save</button>
+          </div>
+          <div class="form-help">Recommended educational window: 30 to 90 days.</div>
+        </div>
+      </form>
+    </div>
+
+    <div style="background-color: #0b1120; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.25rem;">
+      <h3 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--text-primary);">Manual Purge Enforcement</h3>
+      <p style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 1rem;">
+        Purge all records logged prior to cutoff (<code>{{ cutoff.strftime('%Y-%m-%d') }}</code>).
+      </p>
+
+      <div style="margin-bottom: 1rem;">
+        <span style="font-size: 1.4rem; font-weight: 700; color: #fbbf24;">{{ expired_records_count }}</span>
+        <span style="font-size: 0.85rem; color: var(--text-secondary);"> records eligible for purge</span>
+      </div>
+
+      <form method="POST" action="{{ url_for('dashboard.settings') }}" data-confirm="Are you sure you want to permanently purge records older than {{ retention_days }} days?">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="action_type" value="purge_expired">
+        <button type="submit" class="btn btn-outline" style="border-color: var(--color-amber); color: #fbbf24;" {% if expired_records_count == 0 %}disabled{% endif %}>
+          Purge {{ expired_records_count }} Expired Records Now
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <div style="background-color: rgba(2, 6, 23, 0.5); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1rem; font-size: 0.82rem; color: var(--text-secondary);">
+    💡 <strong>Automated Cron/CLI Purge:</strong> You can execute <code>flask purge-data</code> on a schedule (e.g., via cron or systemd timer) to automatically clean up database storage.
+  </div>
+</div>
+
+<!-- Privacy Architecture & Compliance Documentation -->
+<div class="card">
+  <div class="card-header">
+    <h2 class="card-title"><span>🛡️</span> Privacy Principles &amp; Limitations</h2>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 1.25rem; font-size: 0.88rem; color: var(--text-secondary); line-height: 1.6;">
+    <div>
+      <h3 style="color: var(--text-primary); font-size: 1rem; margin-bottom: 0.35rem;">1. Purpose of the Project</h3>
+      <p>Secure Live Tracker is built to demonstrate ethical cybersecurity practices. It illustrates how link analysis can operate with absolute transparency rather than deceitful techniques.</p>
+    </div>
+
+    <div>
+      <h3 style="color: var(--text-primary); font-size: 1rem; margin-bottom: 0.35rem;">2. Information Collected After Explicit Consent</h3>
+      <p>Only if the visitor clicks <strong>Allow &amp; Continue</strong>, the system processes: request IP address, approximate country/region/city derived from IP, browser name, operating system, screen dimensions, language, timezone, and visit timestamp.</p>
+    </div>
+
+    <div>
+      <h3 style="color: var(--text-primary); font-size: 1rem; margin-bottom: 0.35rem;">3. Information NEVER Collected</h3>
+      <p>Zero collection of passwords, authentication tokens, cookies, browsing history, keystrokes, clipboard data, files, browser extensions, or covert hardware/canvas fingerprints.</p>
+    </div>
+
+    <div>
+      <h3 style="color: var(--text-primary); font-size: 1rem; margin-bottom: 0.35rem;">4. IP Geolocation Limitations</h3>
+      <p>All geolocation results are strictly labeled: <em>"Approximate location based on IP. This is not precise GPS location."</em> IP lookups provide only wide geographic approximations and cannot pinpoint a specific physical address.</p>
+    </div>
+
+    <div>
+      <h3 style="color: var(--text-primary); font-size: 1rem; margin-bottom: 0.35rem;">5. Visitor Choice Guarantee</h3>
+      <p>Visitors who choose <strong>Deny &amp; Continue</strong> are never penalized. Zero optional technical data is logged, and they proceed immediately to the original destination URL.</p>
+    </div>
+  </div>
+</div>
+{% endblock %}

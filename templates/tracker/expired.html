@@ -1,0 +1,26 @@
+﻿{% extends "base.html" %}
+
+{% block title %}Tracking Link Expired{% endblock %}
+
+{% block content %}
+<div class="consent-wrapper">
+  <div class="consent-card" style="border-color: rgba(239, 68, 68, 0.4);">
+    <div class="consent-icon" style="border-color: var(--color-rose); color: var(--color-rose); background: var(--color-rose-bg);">⌛</div>
+    <h1 class="consent-title">LINK EXPIRED</h1>
+    <div class="consent-subtitle" style="color: #f87171;">Campaign Lifecycle Terminated</div>
+
+    <div class="consent-statement" style="text-align: center;">
+      <p style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem;">
+        This educational tracking link has passed its designated expiration window.
+      </p>
+      <p style="font-size: 0.88rem; color: var(--text-secondary);">
+        In accordance with data minimization and campaign boundary controls, expired tracking links no longer process visitor decisions or forward traffic.
+      </p>
+    </div>
+
+    <div style="margin-top: 1.5rem;">
+      <a href="{{ url_for('public.index') }}" class="btn btn-outline">&larr; Return to Platform Home</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

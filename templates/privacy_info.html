@@ -1,0 +1,62 @@
+﻿{% extends "base.html" %}
+
+{% block title %}Privacy Standards & Ethical Guidelines{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 900px; margin: 0 auto;">
+  <div class="card-header">
+    <h1 class="card-title"><span>🛡️</span> Privacy Architecture &amp; Responsible Use</h1>
+  </div>
+
+  <div style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.7; display: flex; flex-direction: column; gap: 1.5rem;">
+    <div>
+      <h2 style="color: var(--text-primary); font-size: 1.25rem; margin-bottom: 0.5rem;">1. Purpose of the Platform</h2>
+      <p>
+        <strong>Secure Live Tracker</strong> is engineered exclusively as an educational, consent-first cybersecurity and security-awareness platform. Inspired by the transparent mechanics of legitimate enterprise link shorteners and traffic analytics systems, its primary mission is to teach users and organizations how web telemetry functions without violating privacy.
+      </p>
+    </div>
+
+    <div>
+      <h2 style="color: var(--text-primary); font-size: 1.25rem; margin-bottom: 0.5rem;">2. Informed Visitor Consent</h2>
+      <p>
+        Unlike covert surveillance or deceptive link disguises, Secure Live Tracker intercepts visits with an explicit, readable Consent Gate. No background data acquisition or hardware interaction occurs prior to user interaction.
+      </p>
+      <p style="margin-top: 0.5rem;">
+        Visitors retain full agency: selecting <strong>Deny & Continue</strong> bypasses all technical logging while seamlessly proceeding to the intended destination.
+      </p>
+    </div>
+
+    <div>
+      <h2 style="color: var(--text-primary); font-size: 1.25rem; margin-bottom: 0.5rem;">3. Approximate IP Geolocation Disclaimer</h2>
+      <div style="background-color: var(--color-cyan-bg); border-left: 4px solid var(--color-cyan); padding: 0.75rem 1rem; border-radius: var(--radius-sm); margin: 0.5rem 0;">
+        <p style="color: #e0f2fe; font-size: 0.9rem;">
+          <strong>Notice:</strong> Geolocation lookups performed by this service are derived purely from public IP subnet registries. This provides only broad, approximate regional estimations (e.g., country, state/province, or general city metro area) and is <em>not</em> precise satellite GPS positioning.
+        </p>
+      </div>
+    </div>
+
+    <div>
+      <h2 style="color: var(--text-primary); font-size: 1.25rem; margin-bottom: 0.5rem;">4. Prohibited Data Points</h2>
+      <p>The system is architecturally constrained to prevent the collection or extraction of:</p>
+      <ul style="margin-left: 1.5rem; margin-top: 0.5rem;">
+        <li>Camera, microphone, or precise location sensor feeds.</li>
+        <li>Browser passwords, stored credentials, session cookies, or tokens.</li>
+        <li>Local filesystem paths, documents, or clipboard contents.</li>
+        <li>Keystrokes, private correspondence, or browser extension states.</li>
+        <li>Persistent device fingerprints designed to track individuals across domains.</li>
+      </ul>
+    </div>
+
+    <div>
+      <h2 style="color: var(--text-primary); font-size: 1.25rem; margin-bottom: 0.5rem;">5. Data Retention &amp; Erasure</h2>
+      <p>
+        Data must not be retained indefinitely. The system provides automated time-based retention pruning (defaulting to 90 days or administrator configured) alongside immediate granular deletion controls for individual records and entire campaigns.
+      </p>
+    </div>
+
+    <div style="border-top: 1px solid var(--border-color); padding-top: 1.5rem;">
+      <a href="{{ url_for('public.index') }}" class="btn btn-outline">&larr; Return to Overview</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

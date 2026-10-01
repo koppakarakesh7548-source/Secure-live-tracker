@@ -1,0 +1,119 @@
+﻿{% extends "base.html" %}
+
+{% block title %}System Settings &amp; Security{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+  <div>
+    <h1 style="font-size: 1.75rem; font-weight: 800; letter-spacing: -0.02em;">System Settings &amp; Security Controls</h1>
+    <p style="font-size: 0.88rem; color: var(--text-secondary);">Administrator credential rotation and operational audit records.</p>
+  </div>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+  <!-- Password Rotation -->
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title"><span>🔑</span> Rotate Admin Password</h2>
+    </div>
+
+    <form method="POST" action="{{ url_for('dashboard.settings') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="action_type" value="change_password">
+
+      <div class="form-group">
+        <label class="form-label" for="current_password">Current Password</label>
+        <input type="password" id="current_password" name="current_password" class="form-control" required autocomplete="current-password">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="new_password">New Password (min 8 chars)</label>
+        <input type="password" id="new_password" name="new_password" class="form-control" minlength="8" required autocomplete="new-password">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="confirm_password">Confirm New Password</label>
+        <input type="password" id="confirm_password" name="confirm_password" class="form-control" minlength="8" required autocomplete="new-password">
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="margin-top: 0.5rem;">Update Password</button>
+    </form>
+  </div>
+
+  <!-- Security Configuration Diagnostic -->
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title"><span>🛡️</span> Security Headers &amp; Posture</h2>
+    </div>
+
+    <ul style="list-style: none; display: flex; flex-direction: column; gap: 0.85rem; font-size: 0.88rem;">
+      <li style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-color);">
+        <span>CSRF Protection (Flask-WTF)</span>
+        <span class="badge badge-granted">Active</span>
+      </li>
+      <li style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-color);">
+        <span>Content Security Policy (CSP)</span>
+        <span class="badge badge-granted">Enforced</span>
+      </li>
+      <li style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-color);">
+        <span>Camera / Mic / GPS Restriction</span>
+        <span class="badge badge-granted">Blocked via Permissions-Policy</span>
+      </li>
+      <li style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-color);">
+        <span>Frame Ancestors Protection</span>
+        <span class="badge badge-granted">DENY</span>
+      </li>
+      <li style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-color);">
+        <span>HTTP-Only Session Cookies</span>
+        <span class="badge badge-granted">Enabled</span>
+      </li>
+      <li style="display: flex; justify-content: space-between; align-items: center;">
+        <span>Rate Limiter</span>
+        <span class="badge badge-active">15 req/min on Auth</span>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<!-- Administrator Action Audit Log -->
+<div class="card">
+  <div class="card-header">
+    <h2 class="card-title"><span>📜</span> Administrator Action Audit Trail</h2>
+  </div>
+
+  {% if audit_logs %}
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Timestamp (UTC)</th>
+            <th>Action</th>
+            <th>Target Type</th>
+            <th>Details</th>
+            <th>Origin IP</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for log in audit_logs %}
+            <tr>
+              <td style="font-family: var(--font-mono); font-size: 0.8rem; white-space: nowrap;">
+                {{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}
+              </td>
+              <td><code>{{ log.action }}</code></td>
+              <td>{{ log.target_type or '—' }}</td>
+              <td style="max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                {{ log.details or '—' }}
+              </td>
+              <td><code>{{ log.ip_address or '—' }}</code></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p style="font-size: 0.9rem; color: var(--text-muted); text-align: center; padding: 1.5rem 0;">
+      No audit events recorded yet.
+    </p>
+  {% endif %}
+</div>
+{% endblock %}
